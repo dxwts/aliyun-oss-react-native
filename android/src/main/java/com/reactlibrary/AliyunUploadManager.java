@@ -80,10 +80,14 @@ public class AliyunUploadManager {
         try {
             String[] proj = {MediaStore.Images.Media.DATA};
             cursor = context.getCurrentActivity().getContentResolver().query(selectedVideoUri, proj, null, null, null);
-            if (cursor == null) sourceFile = selectedVideoUri.getPath();
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            sourceFile = cursor.getString(column_index);
+            if (cursor == null) {
+              sourceFile = selectedVideoUri.getPath();
+            }
+            else{
+              int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+              cursor.moveToFirst();
+              sourceFile = cursor.getString(column_index);
+            }
         } catch (Exception e) {
             sourceFile = FileUtils.getFilePathFromURI(context.getCurrentActivity(), selectedVideoUri);
         } finally {
@@ -408,3 +412,4 @@ public class AliyunUploadManager {
         promise.resolve(listPartsData);
     }
 }
+
