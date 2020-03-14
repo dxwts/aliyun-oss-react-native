@@ -10,6 +10,7 @@ import com.alibaba.sdk.android.oss.callback.OSSCompletedCallback;
 import com.alibaba.sdk.android.oss.internal.OSSAsyncTask;
 import com.alibaba.sdk.android.oss.model.GetObjectRequest;
 import com.alibaba.sdk.android.oss.model.GetObjectResult;
+import com.alibaba.sdk.android.oss.model.Range;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
@@ -41,6 +42,10 @@ public class AliyunDownloadManager {
         String xOssPositon = options.getString("x-oss-process");
         //process image
         get.setxOssProcess(xOssPositon);
+
+        int start = options.getInt("start");
+        int end = options.getInt("end");
+        get.setRange(new Range(start, end));
 
         OSSAsyncTask task = mOSS.asyncGetObject(get, new OSSCompletedCallback<GetObjectRequest, GetObjectResult>() {
             @Override
