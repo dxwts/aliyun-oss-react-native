@@ -27,6 +27,7 @@ import java.io.InputStream;
 
 public class AliyunDownloadManager {
     private OSS mOSS;
+    private Boolean reset = false;
 
     /**
      * AliyunDownloadManager
@@ -37,15 +38,33 @@ public class AliyunDownloadManager {
     }
 
     public void asyncDownload(final ReactContext context,String bucketName, String ossFile, String updateDate, ReadableMap options, final Promise promise) {
+        final String localFile = ossFile;
         GetObjectRequest get = new GetObjectRequest(bucketName, ossFile);
 
-        String xOssPositon = options.getString("x-oss-process");
+        // String xOssPositon = options.getString("x-oss-process");
         //process image
-        get.setxOssProcess(xOssPositon);
+        // get.setxOssProcess(xOssPositon);
 
-        int start = options.getInt("start");
-        int end = options.getInt("end");
-        get.setRange(new Range(start, end));
+        try {
+            int start = options.getInt("start");
+            int end = options.getInt("end");
+            if (end == 0) {
+                get.setRange(new Range(start, Range.INFINITE));
+            }
+    
+            if (end > 0) {
+                get.setRange(new Range(start, start + end - 1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            reset = options.getBoolean("reset");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         OSSAsyncTask task = mOSS.asyncGetObject(get, new OSSCompletedCallback<GetObjectRequest, GetObjectResult>() {
             @Override
@@ -55,17 +74,20 @@ public class AliyunDownloadManager {
 
                 InputStream inputStream = result.getObjectContent();
                 long resultLength = result.getContentLength();
+                Log.d("resultLength", "" + resultLength);
 
                 byte[] buffer = new byte[2048];
                 int len;
 
                 FileOutputStream outputStream = null;
-                String localImgURL = Environment.getExternalStorageDirectory().getAbsolutePath() +
-                        "/ImgCache/" +
-                        System.currentTimeMillis() +
-                        ".jpg";
-                Log.d("localImgURL", localImgURL);
-                File cacheFile = new File(localImgURL);
+                String localFileURL = Environment.getExternalStorageDirectory().getAbsolutePath() +
+                        "/boox/" +
+                        localFile;
+                Log.d("localFileURL", localFileURL);
+                File cacheFile = new File(localFileURL);
+                if (cacheFile.exists() && reset) {
+                    cacheFile.delete();
+                }
                 if (!cacheFile.exists()) {
                     cacheFile.getParentFile().mkdirs();
                     try {
@@ -75,6 +97,7 @@ public class AliyunDownloadManager {
                         promise.reject("DownloadFaile", e);
                     }
                 }
+
                 long readSize = cacheFile.length();
                 try {
                     outputStream = new FileOutputStream(cacheFile, true);
@@ -125,7 +148,8 @@ public class AliyunDownloadManager {
                             promise.reject("DownloadFaile", e);
                         }
                     }
-                    promise.resolve(localImgURL);
+
+                    promise.resolve(localFileURL);
                 }
             }
 
