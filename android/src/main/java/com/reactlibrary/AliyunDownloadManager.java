@@ -25,9 +25,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class AliyunDownloadManager {
     private OSS mOSS;
     private Boolean reset = false;
+    private AtomicBoolean abort = new AtomicBoolean(false);
+
+    public void setAbort() {
+        abort.set(true);
+    }
 
     /**
      * AliyunDownloadManager
@@ -39,6 +46,8 @@ public class AliyunDownloadManager {
 
     public void asyncDownload(final ReactContext context,String bucketName, String ossFile, String updateDate, ReadableMap options, final Promise promise) {
         final String localFile = ossFile;
+        int start = 0;
+        int end = 0;
         GetObjectRequest get = new GetObjectRequest(bucketName, ossFile);
 
         // String xOssPositon = options.getString("x-oss-process");
@@ -46,8 +55,8 @@ public class AliyunDownloadManager {
         // get.setxOssProcess(xOssPositon);
 
         try {
-            int start = options.getInt("start");
-            int end = options.getInt("end");
+            start = options.getInt("start");
+            end = options.getInt("end");
             if (end == 0) {
                 get.setRange(new Range(start, Range.INFINITE));
             }
@@ -62,6 +71,7 @@ public class AliyunDownloadManager {
 
         try {
             reset = options.getBoolean("reset");
+            reset = start == 0 ? true : reset;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,6 +122,11 @@ public class AliyunDownloadManager {
                 try {
                     while ((len = inputStream.read(buffer)) != -1) {
                        // resove download data
+                        if (abort.get()) {
+                            cacheFile.delete();
+                            promise.reject("DownloadFaile", new Exception("abort"));
+                            break;
+                        }
                         try {
                             outputStream.write(buffer, 0, len);
                             readSize += len;

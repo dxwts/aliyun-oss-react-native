@@ -121,6 +121,10 @@ export default AliyunOSS = {
     asyncDownload(bucketName, objectKey, filepath='',options = imageXOssProcess) {
         return RNAliyunOSS.asyncDownload(bucketName, objectKey, filepath,options);
     },
+
+    setAbort() {
+        return RNAliyunOSS.setAbort();
+    },
     
     /*
     asyncListBuckets
