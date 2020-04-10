@@ -188,6 +188,20 @@ public class RNAliyunOssModule extends ReactContextBaseJavaModule {
         mUploadManager.asyncUpload(getReactApplicationContext(), bucketName, ossFile, sourceFile, options, promise);
     }
 
+    @ReactMethod
+    public void uploadCancel(String ossFile, final Promise promise) {
+        if (mUploadManager != null) {
+            mUploadManager.uploadCancel(ossFile, promise);
+        }
+    }
+
+    @ReactMethod
+    public void uploadCancelAll(final Promise promise) {
+        if (mUploadManager != null) {
+            mUploadManager.uploadCancelAll(promise);
+        }
+    }
+
     /**
      * asyncAppendObject ReactMethod
      * @param bucketName

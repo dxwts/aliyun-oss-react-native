@@ -47,11 +47,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class AliyunUploadManager {
 
     private OSS mOSS;
+    private Map<String, OSSAsyncTask> taskMap = new HashMap();
 
     /**
      * AliyunUploadManager contructor
@@ -59,6 +62,34 @@ public class AliyunUploadManager {
      */
     public AliyunUploadManager(OSS oss) {
         mOSS = oss;
+    }
+
+    public void uploadCancel(String key, final Promise promise) {
+        try {
+            if (!taskMap.containsKey(key)) {
+                promise.reject(new Error("task not found"));
+                return;
+            }
+            OSSAsyncTask task =  taskMap.get(key);
+            task.cancel();
+            taskMap.remove(key);
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+    }
+
+    public void uploadCancelAll(final Promise promise) {
+        try {
+            for(Iterator<Map.Entry<String, OSSAsyncTask>> it = taskMap.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, OSSAsyncTask> entry = it.next();
+                OSSAsyncTask task =  entry.getValue();
+                task.cancel();
+                it.remove();
+            }
+            promise.resolve("CancelSuccess");
+        } catch (Exception e) {
+            promise.reject(e);
+        }
     }
 
     /**
@@ -130,6 +161,7 @@ public class AliyunUploadManager {
                 PromiseExceptionManager.resolvePromiseException(clientExcepion,serviceException,promise);
             }
         });
+        taskMap.put(ossFile, task);
         Log.d("AliyunOSS", "OSS uploadObjectAsync ok!");
     }
 
@@ -203,6 +235,7 @@ public class AliyunUploadManager {
                 PromiseExceptionManager.resolvePromiseException(clientExcepion,serviceException,promise);
             }
         });
+        taskMap.put(objectKey, task);
     }
 
     /**

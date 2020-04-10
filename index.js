@@ -74,6 +74,14 @@ export default AliyunOSS = {
         return RNAliyunOSS.asyncUpload(bucketName, objectKey, filepath,options);
     },
 
+    uploadCancel(objectKey) {
+        return RNAliyunOSS.uploadCancel(objectKey);
+    },
+
+    uploadCancelAll() {
+        return RNAliyunOSS.uploadCancelAll();
+    },
+
      /**
      * Asynchronously 
      */
